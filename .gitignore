@@ -1,0 +1,11 @@
+﻿__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# guardian runtime outputs
+report_out.html
+guardian/manual_runs/
+guardian/__pycache__/

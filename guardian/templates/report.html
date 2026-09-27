@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guardian Report</title>
+  <style>
+    body { font-family: -apple-system, "Segoe UI", sans-serif; max-width: 760px; margin: 60px auto; color: #1f2328; line-height: 1.6; padding: 0 16px; }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    .meta { color: #57606a; font-size: 14px; margin-bottom: 20px; }
+
+    /* Callout: plain diff vs Guardian */
+    .callout {
+      background: #f0f4ff;
+      border: 1px solid #bcd;
+      border-left: 4px solid #3b82d4;
+      border-radius: 4px;
+      padding: 12px 16px;
+      margin-bottom: 32px;
+      font-size: 14px;
+      color: #1f2328;
+    }
+    .callout strong { color: #0a1f33; }
+
+    h2 { font-size: 16px; margin: 28px 0 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+    .count { font-weight: normal; color: #57606a; }
+
+    .finding {
+      border-left: 4px solid #ccc;
+      padding: 10px 16px;
+      margin-bottom: 12px;
+      border-radius: 0 4px 4px 0;
+    }
+    .BROKEN  { border-color: #d64545; background: #fdf0ef; }
+    .RISKY   { border-color: #e0a020; background: #fdf6e8; }
+    .SAFE    { border-color: #4c8c6b; background: #f0f7f3; }
+
+    .badge {
+      display: inline-block;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      padding: 1px 7px;
+      border-radius: 3px;
+      margin-bottom: 6px;
+    }
+    .BROKEN  .badge { background: #d64545; color: #fff; }
+    .RISKY   .badge { background: #e0a020; color: #fff; }
+    .SAFE    .badge { background: #4c8c6b; color: #fff; }
+
+    .file { font-family: "SFMono-Regular", Consolas, monospace; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .reason { font-size: 14px; color: #1f2328; }
+    .fix { font-size: 13px; color: #57606a; margin-top: 4px; }
+    .fix::before { content: "Fix: "; font-weight: 600; }
+    .lineref {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      background: rgba(0,0,0,.05);
+      border-radius: 3px;
+      padding: 3px 8px;
+      margin-top: 6px;
+      display: inline-block;
+      max-width: 100%;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .empty { color: #57606a; font-size: 14px; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>API Contract Guardian — Report</h1>
+  <div class="meta">
+    Comparing <strong>{{ base_ref }}</strong> → <strong>{{ head_ref }}</strong>
+  </div>
+
+  {# Callout: make the core value proposition visible at a glance #}
+  {% set total = report.total_findings %}
+  {% set changed_count = report.changed_files | length %}
+  <div class="callout">
+    <strong>Plain <code>git diff</code> showed {{ changed_count }} changed file{{ 's' if changed_count != 1 else '' }}
+    ({{ report.changed_files | join(', ') }}).</strong><br>
+    Guardian found <strong>{{ total }} impacted consumer{{ 's' if total != 1 else '' }}</strong> across the repository —
+    <strong style="color:#d64545">{{ report.broken | length }} BROKEN</strong>,
+    <strong style="color:#e0a020">{{ report.risky | length }} RISKY</strong>,
+    <strong style="color:#4c8c6b">{{ report.safe | length }} SAFE</strong>.
+  </div>
+
+  {% for group, label in [('broken', 'Broken'), ('risky', 'Risky'), ('safe', 'Safe')] %}
+    <h2>{{ label }} <span class="count">({{ report[group] | length }})</span></h2>
+    {% if report[group] %}
+      {% for f in report[group] %}
+        <div class="finding {{ f.status }}">
+          <div class="badge">{{ f.status }}</div>
+          <div class="file">{{ f.file }}</div>
+          <div class="reason">{{ f.reason }}</div>
+          {% if f.suggested_fix %}
+            <div class="fix">{{ f.suggested_fix }}</div>
+          {% endif %}
+          {% if f.get('line_reference') %}
+            <code class="lineref">{{ f.line_reference }}</code>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">None.</p>
+    {% endif %}
+  {% endfor %}
+</body>
+</html>
